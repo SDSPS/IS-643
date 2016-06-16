@@ -1,0 +1,34 @@
+---
+title: "IS 643 - Special Topics: Recommender Systems"
+author: "Steve Dunn"
+date: "June 13, 2016"
+output: html_document
+
+---
+
+Prof. Andy Catlin
+IS 643 - Special Topics: Recommender Systems
+Department of Data Analytics, City University of New York
+
+####Assignment 1
+
+###Perform a Scenario Design analysis as described below.  Consider whether it makes sense for your selected recommender system to perform scenario design twice, once for the organization (e.g. Amazon.com) and once for the organization's customers.
+
+For my recommender system web site I choose yelp.com for the yelp recommender system I think it would make sense to do the design scenario twice because they are dealing with the opinions of people and would need some way to filter out any perceived outliers such as businesses trying to pad their own ratings or competitors trying to defame each other.by filtering out any questionable rating the website can then run a second scenario design for the varied persons looking for good restaurant rating from the site.
+
+
+###	Who are your target users?
+The target users would be both persons making recommendations as well as those seeking recommendations.
+
+### What are their key goals?
+The key goals of each set of users are
+To get recommendations on restaurants based on location, price, cuisine or have their recommendations/rating about a particular restaurant taken by the website.
+
+###How can you help them accomplish those goals?
+Using a recommender system that  will be able to validate the legitimacy of the person making the recommendation i.e . how often they making recommendations, the soundness of the recommendation and how those recommendations measure against other recommendation on the same or similar restaurants.
+
+###Attempt to reverse engineer what you can about the site, from the site interface and any available information that you can find on the Internet or elsewhere.
+From the site interface it seems that yelp is using location based recommender system since there is a near you section as well as user input data seeing that there is a login option. The popular events section seems to have high number of user views.
+
+###Include specific recommendations about how to improve the site's recommendation capabilities going forward
+The site could categorize their recommendation by cuisine as well in addition to location, the recommender system can make recommendations based on time of day i.e. lunch, brunch, dinner, breakfast.
