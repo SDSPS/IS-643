@@ -24,9 +24,9 @@ For online news site that advertise to users that come to their site for a parti
 
 
 
-![Measure of the offline performance metrics of different algorithms on off line data and then apply a regression model to predict the CTR from those metrics](assign2_pic1.png)
+![Measure of the offline performance metrics of different algorithms on off line data and then apply a regression model to predict the CTR from those metrics](\C:\Users\dundeva\Documents\SPS\IS643assign2_pic1.png)
 
-![Tradeoff between maximum Coverage and Maximum Accuracy](assign2_pic2.png)
+![Tradeoff between maximum Coverage and Maximum Accuracy](C:\Users\dundeva\Documents\SPS\IS643\assign2_pic2.png)
 
 ###Discuss how you might implement some of the ideas from the talk in an existing or imagined recommender system.  
 
