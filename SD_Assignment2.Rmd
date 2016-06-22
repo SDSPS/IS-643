@@ -23,8 +23,11 @@ https://www.youtube.com/watch?v=m-BSIVT8Wrg&index=11&list=PLaZufLfJumb_EWKKxZatn
 For online news site that advertise to users that come to their site for a particular news story but then leave after reading that one article the need is there to keep the user on the site longer to maximize the revenue potential of the site so a personalized recommender system would need to be developed /trained . How to achieve this personalization via off line testing was discussed and I found the approach intriguing because of the relative accuracy that can be achieved depending on the mix of the varying metrics applied. This is important from a business perspective because it directly affects potential revenues via Ads. Traditional news feed recommend articles based on previous visit to the site, related articles by topic or top news of the day. Some random data collection solution that was explored by Li et al (2011) for yahoo is a possible solution for a personalized results via evaluation metrics, however this only worked for a small number of recommendations, 20 items in the case of yahoo. This system does not work for the scope of the research and so they implemented offline evaluation metrics that evaluate result for  larger datasets  and then  connect to an online test site and use their regression model to see  how accurate the off line metrics predict the online performance. They grouped 17 metrics into Accuracy, Diversity, Coverage, Serendipity and , Novelty.
 
 
+*Measure of the offline performance metrics of different algorithms on off line data and then apply a regression model to predict the CTR from those metrics*
 
 ![Measure of the offline performance metrics of different algorithms on off line data and then apply a regression model to predict the CTR from those metrics](assign2_pic1.png)
+
+*Tradeoff between maximum Coverage and Maximum Accuracy*
 
 ![Tradeoff between maximum Coverage and Maximum Accuracy](assign2_pic2.png)
 
