@@ -1,0 +1,182 @@
+---
+title: "SD_Assignment 2"
+author: "Steve Dunn"
+date: "June 26, 2016"
+output: html_document
+---
+Prof. Andy Catlin
+IS 643 - Special Topics: Recommender Systems
+Department of Data Analytics, City University of New York
+```{r setup, include=FALSE}
+library("recommenderlab")
+library("ggplot2")
+library("lsa")
+library(caret)
+data("MovieLense")
+table_Movie <- read.csv("~/SPS/IS643/Movie.csv")
+table_Users <- read.csv("~/SPS/IS643/Users.csv")
+(echo = FALSE)
+```
+#======================================================================================
+###Using R package to build the similarity and  Collaborative Filtering recommender System code and data set Mostly taken from example in Building a Recommendation System with R
+#======================================================================================
+
+While the models use for recommendations do as is expected i.e. make recommendation the accuracy and precision of those recommendation have to be evaluated to see if they make sense either at a user -user or item-item filtering. The accuracy is measured with RMSE, MSE and MAE. Since the measure as calculated differently and apply different weightings I would choose between the RMSE or MAE.I also found that using k-fold cross validation is faster than splitting the data set manually.
+```{r,echo=FALSE}
+## visualize part of the matrix
+image(MovieLense[1:100,1:100])
+
+## number of ratings per user
+hist(rowCounts(MovieLense))
+
+## number of ratings per movie
+hist(colCounts(MovieLense))
+
+## mean rating (averaged over users)
+mean(rowMeans(MovieLense))
+```
+
+```{r,echo=FALSE}
+sim_user<-similarity(MovieLense[1:10,], method='cosine',which='users')
+as.matrix(sim_user)
+image(as.matrix(sim_user),main="Similarity of Users")
+head(as.matrix(sim_user)[,1:10])
+
+sim_item<-similarity(MovieLense[,1:10], method = 'cosine',which='items')
+as.matrix(sim_item)
+image(as.matrix(sim_item),main="Similarity of Items")
+head(as.matrix(sim_item)[,1:5])
+```
+#Splitting the Data set into train and test
+```{r}
+#Subsetting the dataset
+ratings_movies <- MovieLense[ rowCounts( MovieLense) > 50, colCounts( MovieLense) > 100]
+
+which_train<-sample(x=c(TRUE,FALSE),size = nrow(ratings_movies),replace = TRUE,prob = c(.8,.2))
+rec_data_train<-ratings_movies[which_train,]
+rec_data_test<-ratings_movies[!which_train,]
+
+#build recommender Model
+rec_model<-Recommender(data=rec_data_train,method='IBCF')
+
+#predict 10 movies for the users
+n_rec<-10
+rec_predict<-predict(rec_model,newdata=rec_data_test,n=n_rec)
+
+rec_predict
+rec_matrix<-sapply(rec_predict@items,
+                   function(x){
+                     colnames(rec_data_test)[x]
+                   })
+rec_matrix[,1:10]
+```
+#evaluating Recommendationusing k fold Cross Validation
+```{r}
+
+n_fold <- 10 
+items_to_keep <- 15
+rating_threshold <- 3
+model_to_evaluate <- "IBCF" 
+model_parameters <- NULL
+```
+
+```{r}
+eval_sets <- evaluationScheme( data = ratings_movies,
+                               method = "cross-validation"
+                               , k = n_fold, given = items_to_keep
+                               , goodRating = rating_threshold)
+
+eval_prediction <- predict(object = rec_model,
+                            newdata = getData( eval_sets, "known"),
+                            n = 10, type = "ratings")
+
+eval_accuracy <- calcPredictionAccuracy(
+  x = eval_prediction,
+  data = getData(eval_sets, "unknown"),
+  byUser = FALSE,
+  given = items_to_recommend)
+head( eval_accuracy)
+
+eval_recommender <- Recommender(data = getData(eval_sets, "train"),
+                                method = model_to_evaluate,
+                                parameter = model_parameters)
+
+results <- evaluate(x = eval_sets,
+                    method = model_to_evaluate,
+                    n = seq(10, 100, 10))
+head( getConfusionMatrix( results)[[ 1]])
+
+```
+
+```{r}
+table_wide <- reshape( data =table_Users,#convert table to wide
+                       direction = "wide",
+                       idvar ="UserID",
+                       timevar = "MovieID",
+                       v.names = "Rating" )
+
+###Item Based Collaborative Filtering
+head(table_wide[, 1: 10])
+W_movies<-table_wide
+W_movies <- (table_wide[,!(names(table_wide) %in% c("UserID"))])
+W_movies[is.na(W_movies)] = 0
+head(W_movies[, 1:10])
+
+# Function to calculate cosine Similarity
+Sim_Cos <- function(a,b) 
+{
+  cos_ine <- sum(a*b) / (sqrt(sum(a*a)) * sqrt(sum(b*b)))
+  return(cos_ine)
+}
+
+#Fill table with item rating
+W_movies_sim  <- matrix(NA, nrow=ncol(W_movies)
+                          ,ncol=ncol(W_movies)
+                          ,dimnames=list(colnames(W_movies)
+                          ,colnames(W_movies)))
+
+for(i in 1:ncol(W_movies)) {
+  # Loop through the columns 
+  for(j in 1:ncol(W_movies)) {
+    # Fill matrix with cosine similarities
+    W_movies_sim[i,j] <- Sim_Cos(as.matrix(W_movies[i]),as.matrix(W_movies[j]))
+  }
+}
+```
+
+```{r}
+image(as.matrix(W_movies_sim),main="Similarity of Items")
+
+W_movies_sim <- as.data.frame(W_movies_sim)
+
+W_movies_n <- matrix(NA, nrow=ncol(W_movies_sim),ncol=5,dimnames=list(colnames(W_movies_sim)))
+
+for(i in 1:ncol(W_movies)) 
+{
+  W_movies_n[i,] <- (t(head(n=5,
+              rownames(W_movies_sim
+            [order(W_movies_sim[,i]
+          ,decreasing=TRUE),][i]))))
+}
+
+#convert to rating Matrix
+ratings_movies <- as(W_movies_sim, "realRatingMatrix")
+ratings_movies
+
+#Splitting the Data set into train and test
+which_train<-sample(x=c(TRUE,FALSE),size = nrow(ratings_movies),replace = TRUE,prob = c(.8,.2))
+rec_data_train<-ratings_movies[which_train,]
+rec_data_test<-ratings_movies[!which_train,]
+
+#using the training dataset to create recommender model
+rec <- Recommender(rec_data_train, method = "IBCF")
+
+#predict recommended Movie for  users on test dataset
+rec_pred <- predict(rec, rec_data_test, n=10)
+rec_pred
+pre<-sapply(rec_pred@items,
+            function(x){
+              colnames(ratings_movies)[x]
+            })
+
+```
