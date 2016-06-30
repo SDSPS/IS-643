@@ -1,0 +1,82 @@
+---
+title: "SD_Project_3"
+author: "Steve Dunn"
+date: "June 28, 2016"
+output: html_document
+---
+
+Prof. Andy Catlin
+IS 643 - Special Topics: Recommender Systems
+Department of Data Analytics, City University of New York
+
+***Matrix Factorization Method***
+```{r setup, include=FALSE}
+library("NMF")
+library("recommenderlab")
+library("ggplot2")
+library("lsa")
+```
+
+```{r }
+data("MovieLense")
+
+#subsetting MovieLense data set to a 10 x 20 Matrix
+sub_Movies<-MovieLense[c(1:20),c(1:10)]
+
+#converting realRatingmatrix to matrix
+Subset_m<-as(sub_Movies, "matrix")
+
+hist(Subset_m, xlab = "Ratings",main = paste("Histogram of Ratings"))
+```
+
+```{r}
+#replacing NA with random ratings
+rna<-matrix(sample(1:5,200,replace=TRUE),ncol=10,byrow=FALSE) 
+
+Subset_m[is.na(Subset_m)]<-sample(rna[,1:5]) 
+
+head(Subset_m)
+summary(Subset_m)
+str(Subset_m)
+```
+
+```{r}
+#Non Negative Matrix Factorization 
+be <- nmf(Subset_m, 10,"lee") 
+
+#extract the fitted values of the model
+fitVal <- fitted(be) 
+
+## visualize the fitted values of the matrix
+image.default(fitVal)
+
+# estimated target matrix
+print(fitVal) 
+
+```
+
+```{r}
+ #  W  user feature matrix matrix
+w <- basis(be)
+basismap(be)
+hist(w)
+
+# H  movie feature matrix
+h <- coef(be) 
+coefmap(be)
+hist(h)
+```
+
+```{r}
+# recommendoed Movies
+movies <- data.frame(t(h))
+movies
+
+fmat<-movies[,c("X3","X6")]
+fmat
+
+aheatmap(fmat)
+#title("Movie Feature Plot")
+
+```
+
