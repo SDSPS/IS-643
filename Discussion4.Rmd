@@ -1,0 +1,52 @@
+---
+title: "SD_Discussion 4"
+author: "Steve Dunn"
+date: "July 4, 2016"
+output: html_document
+---
+
+Prof. Andy Catlin
+IS 643 - Special Topics: Recommender Systems
+Department of Data Analytics, City University of New York
+
+
+#"You Might Also Like:" Privacy Risks of Collaborative Filtering 
+
+###Introduction
+Many commercial websites use recommender systems to help customers locate products and content. Such as finding movies, help to improve sales with targeted advertisements, or help social network users meet new friends. Many recommendation systems are based on collaborative filtering i.e. they use patterns learned from user behavior to make recommendations, usually in the form of related-items lists. The scale and complexity of these systems, along with the fact that their outputs reveal only relationships between items as opposed to information about users may suggest that there isn't any privacy risks. In this paper, the researchers develop algorithms which take a moderate amount of auxiliary information about a customer and infer the customer's transactions from temporal changes in the public outputs of the recommender system by using inference attacks which are passive and can be carried out by any Internet user.
+
+###Summary
+
+Recommendation systems help users filter through large data sets of products such as books, movies, music or shopping for products on line. Recommendation systems typically rely on collaborative filtering, or patterns learned from other users. The paper investigated the privacy risks of collaborative filtering based recommendation systems because of the makeup of collaborative filtering i.e.  The systems does not directly reveal behavior of individual users or reveal any personally identifiable information, but instead collaborative filtering leverages the relationships between items. The researchers developed a set of algorithms that allowed for accurate inference of (partial) individual behavior from the aggregate output. The algorithms used to hack the system required only passive access to the public outputs of the recommender system, this is the same access any normal Internet user would have. There was no need to create any fake customers or enter purchases or ratings into the system. The approach here is different from other techniques used for identifying anonymized transactional records the method of attack used relied only on indirect access, the records were entered into a complex collaborative filtering algorithm in which the attacker's view is limited to the resulting outputs this is as opposed to Re-identification which assumes that the attacker has direct access to customers' records.
+
+###Conclusion 
+
+Recommendation systems usually require users to reveal information in order to use the functionality of the recommender system website, this creates a trade-off between usability and user privacy. The researchers in this instance conducted their experiments on real-world systems with a limited sample of users. To demonstrate that their inference algorithms can also work at scale, they implemented an item based collaborative filtering system similar to that of Amazon, and ran it on the Netflix Prize dataset of movie-rating histories. This allowed them to simulate a complete system, producing public recommendations as well as auxiliary information about users with varying degrees of accuracy between 50 and 90 percent. Some privacy concerns of recommender systems can be classify as follows.
+
+**Data Collection:**
+Usually needed as part of access for using a particular system 
+
+**Data Retention:**
+Online information is often difficult to remove, the service provider may even intentionally prevent or hinder removal of data
+
+**Data Sales:**
+The wealth of information that is stored in online systems is likely to be of value to third parties and may be sold in some cases
+
+**Employee Browsing Private Information:**
+The service provider as an entity has full access to the information, and its employees might take advantage of this
+
+**Recommendations Revealing Information:**
+Recommendations inherently are based on the information contained in the recommender system.
+
+**Shared Device or Service**
+Privacy at home can be just as important as privacy online. When sharing a device like a set-top box or computer, or a login to an online service, controlling privacy towards family and friends may be difficult
+
+**Stranger Views Private Information:**
+Users can falsely assume some information to be kept restricted to the service provider or a limited audience, when in reality it is not
+
+###References
+http://www.ieee-security.org/TC/SP2011/PAPERS/2011/paper015.pdf
+Joseph A. Calandrino1 , Ann Kilzer2 , Arvind Narayanan3 , Edward W. Felten1 , and Vitaly Shmatikov2 1Dept. of Computer Science, Princeton University {jcalandr,felten}@cs.princeton.edu 2Dept. of Computer Science, The University of Texas at Austin {akilzer,shmat}@cs.utexas.edu 3Dept. of Computer Science, Stanford University arvindn@cs.utexas.edu
+
+http://eprints.eemcs.utwente.nl/22141/01/Privacy_in_Recommender_Systems.pdf 
+Arjan Jeckmans1 , Michael Beye2 , Zekeriya Erkin2 , Pieter Hartel1 , Reginald Lagendijk2 , and Qiang Tang1 1 Distributed and Embedded Security, Faculty of EEMCS, University of Twente {a.j.p.jeckmans; q.tang; pieter.hartel}@utwente.nl 2 Information Security and Privacy Lab, Faculty of EEMCS, Delft U
