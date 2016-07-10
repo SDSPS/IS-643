@@ -32,14 +32,14 @@ The efficiency of recommendation systems can be significantly improved by using 
 2.	The rate of growth
 3.	Location Context Awareness
 
-
+####shows the process of suggesting to a user considering spatial factors and user's personal information
 
 ![shows the process of suggesting to a user considering spatial factors and user's personal
 information](Fig2.png)
 
-
+####Location recommendations based on trust enhancement in LBSN
 
 ![Location recommendations based on trust enhancement in LBSN](CIN2016-1291358.008.jpg)
 
-
+####process of suggesting new place to visit
 ![process of suggesting new place to visit](figure1.png)
