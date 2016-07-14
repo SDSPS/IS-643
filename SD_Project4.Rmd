@@ -1,0 +1,95 @@
+---
+title: "SD_Assignment 4"
+author: "Steve Dunn"
+date: "July 13, 2016"
+output: html_document
+---
+
+Prof. Andy Catlin
+IS 643 - Special Topics: Recommender Systems
+Department of Data Analytics, City University of New York
+
+For this project I am  using Content-based Filtering which involves analyzing an item that may be similar to other items another user have selected or recommended based on Genres or other specific features. I am using a subset of the Movie Lens data set to recommend movies by using Hierarchial clustering.Clustering is an unsupervised learning method where the goal is to segment data into similar groups.The data set was split into 10 clusters this allows for grouping of the movies across multiple genres seeing that some movies have multiple genres . The movies are recommended not based on the rating but by similarity of genres.
+```{r, setup, include=FALSE}
+movies = read.table("~/SPS/IS643/project 4/movies.txt", header=FALSE, sep="|",quote="\"")
+
+colnames(movies) = c("ID", "Title", "ReleaseDate", 
+                     "VideoReleaseDate", "IMDB", "Unknown",
+                     "Action", "Adventure", "Animation",
+                     "Childrens", "Comedy", "Crime", 
+                     "Documentary", "Drama", "Fantasy",
+                     "FilmNoir", "Horror", "Musical", 
+                     "Mystery", "Romance", 
+                     "SciFi", "Thriller", "War", "Western")
+movies$ID = NULL
+movies$ReleaseDate = NULL
+movies$VideoReleaseDate = NULL
+movies$IMDB = NULL
+
+#Remove duplicates
+movies = unique(movies)
+```
+Looking a the structure of the dataset I can see that the data for the Genres contain 0's and 1's which indicates that a particular Movie belongs to a particular Genre from this observation it can be seen that some movies have multiple genres.
+```{r}
+str(movies)
+head(movies)
+```
+create a subset from the data and calculate the distance matrix
+which Computes the  distance between each pairs of points per cluster. I utilized the dist function for this purpose.The most popular distance methos is Euclidean distance .After calculating the distance I used a dendogram to represent the data.I looked at a subset of the data as looking at the entire data was not very clear
+```{r}
+
+set.seed(1306)
+sammovies <- movies[sample(2:20, 15),] # sample from the data set
+
+distance<- dist(sammovies[2:20], method="euclidean") 
+distance
+
+cluster<- hclust(distance, method="average")
+
+#The vertical lines represents the distance
+plot(cluster, hang=-1,cex = 0.6)
+
+clustMovies = hclust(distance, method = "ward.D2")
+#rect.hclust(hclust(distances, method = "ward.D2"),h=3)
+
+plot(clustMovies, hang=-1,cex = 0.6)
+
+#cuts the tree in to groups of 10
+cutree(clustMovies,10)
+```
+using differnt method to dispay the Dendogram
+```{r}
+# Calculate distances between genre features: 
+distances = dist(movies[2:20], method = "euclidean")
+
+clustMovies = hclust(distances, method = "ward.D2")
+
+plot(clustMovies, hang=-1,cex = 0.6)
+```
+
+```{r}
+#Label each movie in clusters with k=10 clusters
+clustGrps = cutree(clustMovies, k = 10)
+```
+Calculate average for Comedy and Romance genre within each cluster
+```{r}
+tapply(movies$Comedy, clustGrps, mean)
+tapply(movies$Horror, clustGrps, mean)
+```
+check to see which cluster the movie Clerks and Phycho are in  and similar movies to them that would be in the same or similar Genres
+```{r}
+subset(movies, Title=="Toy Story (1995)")
+cluster2 = subset(movies, clustGrps==1)
+cluster2$Title[1:10]
+
+subset(movies, Title=="Psycho (1960)")
+cluster3 = subset(movies, clustGrps==3)
+cluster3$Title[1:10]
+
+```
+weighting according to clusters for variable within the cluster
+```{r}
+binsp = split(movies[2:20], clustGrps)
+lapply(binsp, colMeans)
+```
+Adding Context to the recommender by recommending movies with similar genes allows for a possible wider choice in selection as opposed to UBCF where the recommendation is based on other user who rated similar movies. If we look at Toy Story I can see that it spans Animation,Childrens and Comedy genres and gives a recommendation for Mask, The (1994) that would not normally be classified as animation or comedy.
