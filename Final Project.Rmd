@@ -1,0 +1,241 @@
+---
+title: "Final Project"
+author: "Steve Dunn"
+date: "July 17, 2016"
+output: html_document
+---
+Prof. Andy Catlin
+IS 643 - Special Topics: Recommender Systems
+Department of Data Analytics, City University of New York
+```{r setup, include=FALSE}
+# load requried libraries and data
+library(ggplot2)
+library(plyr)
+library(RColorBrewer)
+library(grid)
+library(reshape2)
+library(caret)
+library("data.table")
+library(pander)
+library("recommenderlab")
+library("lsa")
+library(Metrics)
+data("MovieLense")
+```
+
+For my Final project I will build a recommendation system that will look at recommendation from Item Based Collaborative Filtering, User Based Collaborative Filtering and recommendations by genre with Hierarchal clustering. I will create models to get Movies from similar Genres based on the distance of the clusters.Hierarchal Clustering is an unsupervised learning method where the goal is to segment data into similar groups.The dataset used is from the MovieLens dataset avaliable in the Recommenderlab package or from their website http://grouplens.org/datasets/movielens.
+
+#Data Exploration
+
+```{r}
+#Visualization of the data
+str(MovieLense)
+class(MovieLense)
+head(MovieLense)
+dim(MovieLense)
+summary(MovieLense)
+
+## visualize part of the matrix
+image(MovieLense[1:100,1:100])
+
+## number of ratings per user
+hist(rowCounts(MovieLense))
+
+## number of ratings per movie
+hist(colCounts(MovieLense))
+
+## mean rating (averaged over users)
+mean(rowMeans(MovieLense))
+```
+
+calculate similarity between user ratings and item ratings
+
+```{r}
+#calculate Similarity matrix
+similarity_users <- similarity(MovieLense[1:4,], method = "cosine", which = "users")
+as.matrix( similarity_users)
+image(as.matrix(similarity_users), main = "User similarity")
+
+  similarity_items <- similarity(MovieLense[,1:4], method = "cosine", which = "items")
+as.matrix(similarity_items)
+image(as.matrix(similarity_items), main = "Movies similarity")
+```
+
+splitting the data set into training and test where i will use the traing to traing the data and use the test data set to predict the movies by IBCF and UBCF
+
+```{r}
+#=============================================================================================================
+#Splitting the dataset into Train and test
+#=============================================================================================================
+#Subsetting the dataset
+ratings_movies <- MovieLense[ rowCounts( MovieLense) > 50, colCounts( MovieLense) > 100]
+ratings_norm<-(ratings_movies)
+
+which_train<-sample(x=c(TRUE,FALSE),size = nrow(ratings_norm),replace = TRUE,prob = c(.8,.2))
+rec_data_train<-ratings_movies[which_train,]
+rec_data_test<-ratings_movies[!which_train,]
+
+```
+
+```{r}
+
+#Prediction for Item Based Collaborative Filtering
+
+#build recommender Model
+rec_modelI<-Recommender(data=rec_data_train,method='IBCF')
+
+#predict 5 movies for specific users
+n_rec<-5
+recom2<-predict(rec_modelI,newdata=rec_data_test[1],n=n_rec)
+#convert recommenderlab object to readable list
+recom_list <- as(recom2, "list") 
+recom_list
+
+#predict 10 movies for N users
+rec_predictI<-predict(rec_modelI,newdata=rec_data_test,n=n_rec)
+rec_predictI
+rec_matrix<-sapply (rec_predictI@items,
+function(x)
+  {
+  colnames(rec_data_test)[x]
+  }
+)
+rec_matrix[,1:5]
+```
+
+```{r}
+#==========================================================================================
+#Prediction for User Based Collaborative Filtering
+#==========================================================================================
+#build recommender Model
+rec_modelU<-Recommender(data=rec_data_train,method='UBCF')
+model_details <- getModel(rec_modelU)
+
+#predict 5 movies for specific users
+n_rec<-10
+
+#Obtain top 10 recommendations for 1st user in dataset
+recom <- predict(object=rec_modelU, newdata=rec_data_test[1], n=n_rec) 
+
+#convert recommenderlab object to readable list
+recom_list <- as(recom, "list") 
+recom_list
+
+#predict 10 movies for N users
+rec_predictU<-predict(rec_modelU,newdata=rec_data_test,n=n_rec)
+rec_predictU
+
+rec_matrixU<-sapply(rec_predictU@items,function(x){colnames(rec_data_test)[x]})
+rec_matrixU[,1:5]
+```
+
+Using the built in functions from RecommenderLab to evaluate the models,Using K fold validation it can be seen that UBCF performs better than IBCF
+
+```{r}
+#Model Evaluation
+#k=5 meaning a 5-fold cross validation. given=3 meaning a Given-3 protocol
+n_fold=5
+evaluation_scheme <- evaluationScheme(ratings_movies, method="cross-validation", n_fold, given=3, goodRating=5) 
+evaluation_results <- evaluate(evaluation_scheme, method="UBCF")
+eval_results <- getConfusionMatrix(evaluation_results)[[1]]
+eval_results#The evaluation results of the top-N recommender
+
+algorithms <- list(
+  IBCF = list(name = "IBCF", param = NULL),
+  UBCF = list(name = "UBCF", param = NULL),
+  SVD = list(name = "SVD", param = NULL)
+)
+evlist <- evaluate(evaluation_scheme, algorithms)
+plot(evlist, legend="topleft")
+
+plot(evlist,"prec", legend="bottomright")
+
+plot(evaluation_results,"prec/rec", annotate = TRUE, main = "Precision-recall")
+```
+
+###Recommendation by Genres
+
+to begin the data has to be re-organize in such a way that allows for  the movies to be displayed by specific genres. From the design perspective, this is much easier for the user compared to selecting a movie from a single  list of all the available movies
+
+```{r, include=FALSE}
+#Recommendation by Genres
+
+#content Based Filtering
+movies = read.table("~/SPS/IS643/project 4/movies.txt", header=FALSE, sep="|",quote="\"")
+
+colnames(movies) = c("ID", "Title", "ReleaseDate", 
+                     "VideoReleaseDate", "IMDB", "Unknown",
+                     "Action", "Adventure", "Animation",
+                     "Childrens", "Comedy", "Crime", 
+                     "Documentary", "Drama", "Fantasy",
+                     "FilmNoir", "Horror", "Musical", 
+                     "Mystery", "Romance", 
+                     "SciFi", "Thriller", "War", "Western")
+
+#remove unwnated columns
+movies$ID = NULL
+movies$ReleaseDate = NULL
+movies$VideoReleaseDate = NULL
+movies$IMDB = NULL
+
+#Remove duplicates MOvies
+movies = unique(movies)
+
+```
+
+Take a subset from the data and calculate the distance matrix,using the Euclidean method which is the  distance between each pairs of points per cluster .After calculating the distance I used a dendogram to display the data with average,complete and ward methods.The distance matrix shows the distance between clusters e.g. the distance between cluster 3 and 20 is 1.73 so this indicates that there are possible good similarity of movoes between these two clusters.
+
+**Initially each genre is trated as a single cluster and then the algorithm tries to find the closest in distance until all the genres form one large cluster**
+```{r}
+set.seed(1306)
+sammovies <- movies[sample(2:20, 11),] # sample from the data set
+
+distance<- dist(sammovies[2:20], method="euclidean") #The distance between two points in space
+print(distance,digits=3)#euclidean distance between each variable
+
+cluster<- hclust(distance)#dendogram with complete linkage
+
+cluster<- hclust(distance, method="average")#dendogram with average linkage
+#The vertical lines represents the distance
+plot(cluster, cex = 0.6)
+plot(cluster, labels=sammovies$Title,cex = 0.6)
+```
+
+**Displaying cluster with Ward.D2  method taking a look at the movies Toy Story and Psycho to see which movies would be similar to those and the genres that they belong to **
+
+```{r}
+clustMovies = hclust(distance, method = "ward.D2")
+cm=hclust(distance, method = "ward.D2")
+plot(cm, cex = 0.6)
+plot(clustMovies,cex = 0.6)
+plot(clustMovies, labels=sammovies$Title,cex = 0.6)
+
+#cuts the tree in to groups of 10
+clustGrps1=cutree(clustMovies, k=10)
+
+# Calculate distances between genre features: 
+distances = dist(movies[2:20], method = "euclidean")
+
+clustMovies = hclust(distances, method = "ward.D2")
+
+#plot(clustMovies, hang=-1,cex = 0.6)
+
+#Label each movie in clusters with k=10 clusters
+clustGrps = cutree(clustMovies, k=10)
+
+tapply(movies$Comedy, clustGrps, mean)
+tapply(movies$Horror, clustGrps, mean)
+
+subset(movies, Title=="Toy Story (1995)")
+cluster2 = subset(movies, clustGrps==1)
+cluster2$Title[1:10]
+
+subset(movies, Title=="Psycho (1960)")
+cluster3 = subset(movies, clustGrps==3)
+cluster3$Title[1:10]
+
+#calculate the cluster means
+binsp = split(movies[2:20], clustGrps)
+lapply(binsp, colMeans)
+
+```
